@@ -21,12 +21,20 @@ app = FastAPI(
     openapi_tags=openapi_tags,
 )
 
-allow_origins = [o.strip() for o in settings.cors_allow_origins.split(",")] if settings.cors_allow_origins else ["*"]
+allow_origins = (
+    [o.strip() for o in settings.cors_allow_origins.split(",")] if settings.cors_allow_origins else ["*"]
+)
+
+# Important CORS correctness:
+# - Browsers will reject `Access-Control-Allow-Origin: *` when `Access-Control-Allow-Credentials: true`.
+# - We default to '*' for local/dev convenience; in that case we must disable credentials.
+# - If you need credentialed requests (cookies), set CORS_ALLOW_ORIGINS to an explicit comma-separated list.
+allow_credentials = allow_origins != ["*"]
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=allow_origins if allow_origins != ["*"] else ["*"],
-    allow_credentials=True,
+    allow_origins=allow_origins,
+    allow_credentials=allow_credentials,
     allow_methods=["*"],
     allow_headers=["*"],
 )
