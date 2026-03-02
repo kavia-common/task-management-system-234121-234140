@@ -1,0 +1,26 @@
+from __future__ import annotations
+
+from collections.abc import Generator
+
+from sqlalchemy import create_engine
+from sqlalchemy.orm import Session, sessionmaker
+
+from src.core.config import settings
+
+# SQLAlchemy engine / session factory
+engine = create_engine(
+    settings.postgres_url,
+    pool_pre_ping=True,
+)
+
+SessionLocal = sessionmaker(bind=engine, autocommit=False, autoflush=False)
+
+
+# PUBLIC_INTERFACE
+def get_db() -> Generator[Session, None, None]:
+    """FastAPI dependency that yields a SQLAlchemy session and ensures cleanup."""
+    db = SessionLocal()
+    try:
+        yield db
+    finally:
+        db.close()
